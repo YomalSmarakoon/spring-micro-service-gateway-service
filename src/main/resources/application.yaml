@@ -11,9 +11,10 @@ spring:
 management:
   endpoint:
     gateway:
-      access: read-only
+#      access: read-only
+      access: unrestricted            # To enable mutating operations like: /actuator/gateway/refresh
   endpoints:
     web:
       exposure:
-        include: "health,info,gateway"
+        include: "health,info,gateway,refresh"
 
