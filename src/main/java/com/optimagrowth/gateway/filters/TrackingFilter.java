@@ -16,8 +16,7 @@ import reactor.core.publisher.Mono;
 @Component
 public class TrackingFilter implements GlobalFilter { //Global filters implement the GlobalFilter interface and must override the filter() method.
 
-    private static final Logger LOG =
-            LoggerFactory.getLogger(TrackingFilter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TrackingFilter.class);
 
     @Autowired
     FilterUtils filterUtils; //Commonly used functions across your filters are encapsulated in the FilterUtils class.
@@ -28,20 +27,19 @@ public class TrackingFilter implements GlobalFilter { //Global filters implement
         HttpHeaders requestHeaders = exchange.getRequest().getHeaders(); // Extracts the HTTP header from the request using the ServerWebExchange object passed by parameters to the filter() method
 
         if (isCorrelationIdPresent(requestHeaders)) {
-            LOG.debug("tmx-correlation-id found in tracking filter: {}. ",
+            LOG.debug("correlation-id found in tracking filter: {}. ",
                     filterUtils.getCorrelationId(requestHeaders));
+
         } else {
             String correlationID = generateCorrelationId();
             exchange = filterUtils.setCorrelationId(exchange, correlationID);
 
-            LOG.debug(
-                    "tmx-correlation-id generated in tracking filter: {}.",
-                    correlationID);
+            LOG.debug("correlation-id generated in tracking filter: {}.", correlationID);
         }
         return chain.filter(exchange);
     }
 
-    // A helper method that checks if the tmx-correlation-id is present; it can also generate a correlation ID UUID value.
+    // A helper method that checks if the correlation-id is present; it can also generate a correlation ID UUID value.
     private String generateCorrelationId() {
         return java.util.UUID.randomUUID().toString();
     }
