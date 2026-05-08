@@ -30,4 +30,14 @@ public class FilterUtils {
                 .build();
     }
 
+    public String getAuthToken(HttpHeaders requestHeaders) {
+        if (requestHeaders.get(HttpHeaders.AUTHORIZATION) != null) {
+            return requestHeaders.get(HttpHeaders.AUTHORIZATION)
+                    .stream()
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        return null;
+    }
 }
