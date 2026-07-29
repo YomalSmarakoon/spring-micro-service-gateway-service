@@ -3,6 +3,8 @@ package com.optimagrowth.gateway.filters;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.optimagrowth.gateway.utils.FilterUtils;
+import io.micrometer.tracing.Span;
+import io.micrometer.tracing.Tracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +31,9 @@ public class TrackingFilter implements GlobalFilter { //Global filters implement
     @Autowired
     FilterUtils filterUtils; //Commonly used functions across your filters are encapsulated in the FilterUtils class.
 
+    @Autowired
+    Tracer tracer; // Micrometer Tracing's vendor-neutral Tracer (Spring Cloud Sleuth's replacement); backed by Brave here.
+
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) { // Code that executes every time a request passes through the filter
 
@@ -50,8 +55,15 @@ public class TrackingFilter implements GlobalFilter { //Global filters implement
         return chain.filter(exchange);
     }
 
-    // A helper method that checks if the correlation-id is present; it can also generate a correlation ID UUID value.
+    // Uses the request's real distributed-trace ID as the correlation id, so it lines up with
+    // the same trace ID every other traced hop (and, once an exporter is wired up, Zipkin/Tempo)
+    // will report for this request. Falls back to a random UUID only if no span is active,
+    // so the header is never left unset.
     private String generateCorrelationId() {
+        Span currentSpan = tracer.currentSpan();
+        if (currentSpan != null) {
+            return currentSpan.context().traceId();
+        }
         return java.util.UUID.randomUUID().toString();
     }
 
